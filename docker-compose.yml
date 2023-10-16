@@ -1,10 +1,16 @@
 services:
   db:
     image: mysql:latest
+    container_name: db
+    restart: unless-stopped
     ports:
       - "3306:3306"
     env_file:
-      - .db.env
+      - .env
+    environment:
+    - MYSQL_DATABASE=wordpress
+    - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
+    - MYSQL_PASSWORD_FILE=/run/secrets/db_password
     secrets:
       - db_root_password
       - db_password
@@ -15,29 +21,20 @@ services:
     depends_on:
       - db
     image: wordpress:latest
-    restart: always
+    container_name: wordpress
+    restart: unless-stopped
     ports:
       - "8000:80"
-    env_file:
-      - .wordpress.env
+    env_file: .env
+    environment:
+      - WORDPRESS_DB_HOST=db:3306
+      - WORDPRESS_DB_USER=$MYSQL_USER
+      - WORDPRESS_DB_NAME=wordpress
+      - WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password
     secrets:
       - db_password
     volumes:
       - ./.data/wordpress:/var/www/html
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    links:
-      - db:db
-    ports:
-      - 8282:80
-    environment:
-      MYSQL_USER: wordpress
-      MYSQL_PASSWORD_FILE: /run/secrets/db_password
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
-    secrets:
-      - db_password
-      - db_root_password
 
 secrets:
   db_password:

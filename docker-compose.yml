@@ -3,8 +3,8 @@ services:
     image: mysql:latest
     container_name: db
     restart: unless-stopped
-    ports:
-      - "3306:3306"
+    networks:
+      - general
     env_file:
       - .env
     environment:
@@ -23,6 +23,8 @@ services:
     image: wordpress:latest
     container_name: wordpress
     restart: unless-stopped
+    networks:
+      - general
     ports:
       - "80:80"
       - "443:443"
@@ -36,6 +38,10 @@ services:
       - db_password
     volumes:
       - ./.data/wordpress:/var/www/html
+
+networks:
+  general:
+    driver: bridge
 
 secrets:
   db_password:
